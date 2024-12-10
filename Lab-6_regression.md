@@ -10,6 +10,7 @@ library(sf)
 library(tidyverse)
 library(tmap)
 library(car)
+library(broom)
 ```
 
 **Overview:** This lab focuses on regression techniques. You’ll be
@@ -141,19 +142,51 @@ a summary of each model. Write a summary of those results that indicates
 the direction, magnitude, and significance for each model coefficient.*
 
 ``` r
-results <- lapply(variables, function(var) {
+model_results <- map_df(variables, function(var) {
   model <- lm(ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
-  summary(model)})
+  tidy(model) %>% mutate(Variable = var)})
+```
+
+    ## Warning in summary.lm(x): essentially perfect fit: summary may be unreliable
+
+``` r
+model_results_with_lapply<- setNames(lapply(variables, function(var) {
+  model <- lm(ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
+  summary(model)}), variables)
 ```
 
     ## Warning in summary.lm(model): essentially perfect fit: summary may be
     ## unreliable
 
 ``` r
-results
+model_results <- model_results[, c("Variable","term", "estimate", "std.error", "statistic", "p.value")]
+
+print(model_results)
 ```
 
-    ## [[1]]
+    ## # A tibble: 14 × 6
+    ##    Variable       term              estimate std.error statistic   p.value
+    ##    <chr>          <chr>                <dbl>     <dbl>     <dbl>     <dbl>
+    ##  1 ndvi_20_med    (Intercept)      -1.33e-16  4.57e-18  -2.90e 1 4.68e-123
+    ##  2 ndvi_20_med    lab6_data[[var]]  1   e+ 0  1.52e-17   6.56e16 0        
+    ##  3 maxtemp_20_med (Intercept)       6.61e- 1  2.94e- 2   2.25e 1 6.12e- 85
+    ##  4 maxtemp_20_med lab6_data[[var]] -1.31e- 2  9.60e- 4  -1.36e 1 8.71e- 38
+    ##  5 mintemp_20_med (Intercept)       4.64e- 1  1.90e- 2   2.44e 1 2.18e- 96
+    ##  6 mintemp_20_med lab6_data[[var]] -1.23e- 2  1.13e- 3  -1.09e 1 1.52e- 25
+    ##  7 rain_20_sum    (Intercept)       1.30e- 1  7.06e- 3   1.85e 1 1.78e- 62
+    ##  8 rain_20_sum    lab6_data[[var]]  9.12e- 7  3.95e- 8   2.31e 1 1.78e- 88
+    ##  9 pop_20         (Intercept)       2.55e- 1  5.01e- 3   5.09e 1 8.97e-240
+    ## 10 pop_20         lab6_data[[var]]  1.50e- 6  1.50e- 7   1.00e 1 4.07e- 22
+    ## 11 water_20_pct   (Intercept)       2.69e- 1  6.29e- 3   4.28e 1 3.40e-199
+    ## 12 water_20_pct   lab6_data[[var]] -1.78e- 1  1.54e- 1  -1.15e 0 2.49e-  1
+    ## 13 elev_med       (Intercept)       2.14e- 1  9.74e- 3   2.20e 1 5.05e- 82
+    ## 14 elev_med       lab6_data[[var]]  1.79e- 4  2.90e- 5   6.17e 0 1.14e-  9
+
+``` r
+print(model_results_with_lapply)
+```
+
+    ## $ndvi_20_med
     ## 
     ## Call:
     ## lm(formula = ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
@@ -174,7 +207,7 @@ results
     ## F-statistic: 4.302e+33 on 1 and 714 DF,  p-value: < 2.2e-16
     ## 
     ## 
-    ## [[2]]
+    ## $maxtemp_20_med
     ## 
     ## Call:
     ## lm(formula = ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
@@ -195,7 +228,7 @@ results
     ## F-statistic: 185.9 on 1 and 714 DF,  p-value: < 2.2e-16
     ## 
     ## 
-    ## [[3]]
+    ## $mintemp_20_med
     ## 
     ## Call:
     ## lm(formula = ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
@@ -216,7 +249,7 @@ results
     ## F-statistic:   118 on 1 and 714 DF,  p-value: < 2.2e-16
     ## 
     ## 
-    ## [[4]]
+    ## $rain_20_sum
     ## 
     ## Call:
     ## lm(formula = ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
@@ -237,7 +270,7 @@ results
     ## F-statistic: 532.6 on 1 and 714 DF,  p-value: < 2.2e-16
     ## 
     ## 
-    ## [[5]]
+    ## $pop_20
     ## 
     ## Call:
     ## lm(formula = ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
@@ -258,7 +291,7 @@ results
     ## F-statistic: 99.97 on 1 and 714 DF,  p-value: < 2.2e-16
     ## 
     ## 
-    ## [[6]]
+    ## $water_20_pct
     ## 
     ## Call:
     ## lm(formula = ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
@@ -279,7 +312,7 @@ results
     ## F-statistic: 1.332 on 1 and 714 DF,  p-value: 0.2489
     ## 
     ## 
-    ## [[7]]
+    ## $elev_med
     ## 
     ## Call:
     ## lm(formula = ndvi_20_med ~ lab6_data[[var]], data = lab6_data)
@@ -305,6 +338,66 @@ indicate the independent variable has minimal impact on NDVI. The
 highest explanatory power is observed in 4(42.73%), and the lowest is 6
 with 0.186%. 1,4,5,and 6 have positive effects, however, 2,3,6 have
 negative effects.}
+
+{REVISION:
+
+1.  NDVI (\[1\]) - Direction is positive witch a miagnitude of 1.000
+    which indicates a one to one relationship, meaning the changes in
+    the independent variable directly translate into equal changes in
+    NDVI. The significance is highly significant (p\<0.001). This causes
+    the model to explain 100% of the variance, which indicates the two
+    variables are the same calculated or recorded in different ways.
+
+2.  max temp 2020 (\[2\]) - Direction is negative with a magnitude of
+    -0.0131, which suggets that for every 1 C increase in max temp, the
+    NDVI increases by 0.0131. this is highly significant (p\<0.001) with
+    high maximum temps reduce vegetation health, likely due to thermal
+    stress in arid condiditons
+
+3.  min temp 2020 (\[3\]) - Direction is negative with a magnitude of
+    -0.0123, which suggets a 1 C increase in min temperature results in
+    a 0.0123 decrease in NDVI, which is highly significant (p\<0.001).
+    Warmer minimum temperatures, potentially less cooling at night,
+    negatively impact vegetation growth.
+
+4.  rainfall (\[4\]) - Direction is positive with a 9.12e-07, which
+    means for every 1mm increase in rainfall, NDVI increases by 9.12e-07
+    (0.000000912). even though it is small, the effect becomes
+    noticeable over large changes in rainfall. Rainfall supports
+    vegetation, and this relationship statistically is robust, but may
+    require transformation for improved interpretability.
+
+5.  population (\[5\]) - Direction is positive with 1.50e-06, which
+    suggests for each additional person per square km, NDVI increases by
+    1.50e-06 (0.0000015), which is highly significant (p\<0.001). The
+    positive association may reflrect vegetation in urban areas, but is
+    statistically weak.
+
+6.  water_20_pct (\[6\]) - Direction is negative with -0.178 which for
+    every 1% increase in water pct, NDVI decreases by 0.178, which is
+    not significant (p=0.249). Areas with higher water coverage have
+    less vegetation, as expected, but this relationship is not
+    statistically robust.
+
+7.  Elevation (\[7\]) - Direction is positive with 0.000179 which for
+    every 1m increase in elevation, NDVI increases by 0.000179, which is
+    highly significant (p\<0.001). Higher elevations may provide
+    favorable climatic conditions for vegetation, though the effect size
+    is relatively small.
+
+Rainfall and temp are key predictors with significant relationships to
+NDVI. Higher rainfall improves NDVI, but higher temps reduce it. Water
+pct is weak, which is non-significant. it indicates less vegetation in
+water dominated regions, but the effect is unreliable. High values in
+rainfall (0.4273) and temp models suggest these variables explain a
+substantial portion of the variablility in NDVI. The interpretation
+emphasizes the practical and statistical significance of each variable,
+as well as its relationship to NDVI. Using both Tidy and lapply, i see
+the differences with how the models are printed. I see with both the
+numbers are generally the same as well but the tidy makes it into an
+easily readable format.
+
+}
 
 **Question 5** *Create a multivariate regression model with the
 variables of interest, choosing EITHER max or min temperature (but not
@@ -368,6 +461,67 @@ positive, magnitude is 0.0001215 with an increase in elevation is
 associated with a small increase in NDVI. significance is highly
 significant with p-1.28x10e-10.}
 
+{REVISION:
+
+1.  intercept - Direction is negative with a magnitude of 0.4591 which
+    is highly significant (p\<2e-16). when the independent variables are
+    set to zero, the NDVI is approximately 0.4591. this is a baseline
+    NDVI value when enviornmental and population factors are minimal.
+
+2.  max temp - Direction is negative with a magnitude of -0.01173 which
+    is highly. significant (p\<2e-16). for every 1 C increase in max
+    temp, NDVI decreases by 0.01173. Higher temps reduce vegetation
+    density, likely due to increased water loss and heat stress on
+    vegetation.
+
+3.  rainfall - Direction is positive with a magnitude of 8.464e-07,
+    which is highly significant (p\<2e-16). a 1mm increase in rainfall
+    results in a 0.0000008464 increase in NDVI. since rainfall is
+    measured in mm, a meaningful effect would require significant
+    cumulative rainfall. this small magnitude highlights how NDVI
+    responds slowly to incremental increases in rainfall but still
+    recognizes water availability as essential for vegetation growth.
+
+4.  population - Direction is positive with a magnitude of 2.873e-07,
+    which is significant (p=0.00613). a 1 person increase per km squared
+    is assosiated with 0.0000002873 increase in NDVI. this effect is
+    minimal, indicating that higher population density has a very small
+    positive influence, possibly due to urba vegetation, parks, or
+    greener urban areas.
+
+5.  water pct - Direction is negative with a magnitude of -0.03387,
+    which is not significant (p=0.7275). a 1% increase in water coverage
+    results in a 0.03387 decrease in NDVI, but this is not statistically
+    significant. Water dominannt areas lack vegetation but do not
+    meaningfully impact NDVI in this model.
+
+6.  elevation - Direction is positive with a magnitude of 0.0001215,
+    which is highly significant (p=1.28e-10). A 1 meter increase in
+    elevation is associated with a 0.0001215 increase in NDVI. while
+    this effect is small, it is highly significant indicating areas at
+    higher elevations tend to have slightly denser vegetation, likely
+    due to cooler temperatures or favorable climatic conditions.
+
+The R value means that 63.97% of the variance in NDVI is explained by
+the five predictors. This is a strong model fit, indicating that these
+enviornmental and population variables meaningfully influence vegetation
+cover.
+
+The very high F statistic and corresponding P value suggest that the
+overall model is highly statisticaslly significant and the combination
+of predictors collectively improves the prediction of NDVI.
+
+In comparison to Q4, max temp magnitude decreased from -0.0131 to
+-0.01173 indicating a slight reduction in effect due to controlling for
+other variables. Rainfall dropped from 9.124e-07 to 8.464e-07, showing a
+slight decrease in ths contribution when other variables are included.
+Population decreased significantly from 1.500e-06 to 2.873e-07,
+indicating when controlling for other factors, population plays a
+smaller role. Water pct was negative in the univariate model, but not.
+significant, and remain the case in the multivariate model (p=0.7275).
+Elevation dropped slightly from 1.787e-04 to 1.215e-04, showing its
+reduced standalone impact when controlling for othe variables.}
+
 **Question 7** *Use a histogram and a map to assess the normality of
 residuals and any spatial autocorrelation. Summarise any notable
 patterns that you see.*
@@ -402,6 +556,30 @@ from normality, with a longer left tail and a few outliers on both
 extremes. These outliers suggest the model may struggle with extreme
 cases, but the concentration of residuals near zero reflects strong
 performance for most observations}
+
+{REVISION: Extreme negative residuals are in. the dark red areas. These
+areas are located in the northern and coastal regions as well as parts
+of southern and southeastern Australia. these areas may have unique
+vegetation patterns or enviornmental conditions (tropical, coastal
+ecosystems) that are not well captured well by the model predictors.
+Moderate negative areas are in light orange, which are spread across
+central Australia and parts of the southern interior. This may reflect
+regions with arid conditions or other factors that may partialy
+influence NDVI but not fully explained. Neutral areas are in white and
+are distibuted evenly across the country, particularly in the central
+and southeastern interior regions. these areas align well with the
+predictors in the model, such as temp, rainfall and elevation. moderate
+positive areas in light blue are found across western and inland
+Australia. this may suggest some mismatch in how predictors explain
+vegetation conditions in these areas. Extreme positive areas are in dark
+blue. these areas are sparsely located in parts of central and inland
+Australia. this area may be missing variables such as soil quality, land
+management or innacurate aussumptions about vegetation responses.
+Coastal ans northern regions struggle to predict NDVI accurately with
+the model in these areas, likely due to climatic and ecological factors.
+Central and arid regions are closer to zero in many areas, but other
+factors such as enviornmental factors (soil characteristics, vegetation
+adaptations) might improve the model. }
 
 **Question 8** *Assess any issues with multicollinearity or
 heteroskedastity in this model using the techniques shown in class. Run
@@ -443,7 +621,7 @@ predictors of NDVI and explains a substantial portion of the variance.
 However, the heteroskedasticity issue highlights potential limitations
 with the reliability of standard errors and significance tests.
 Adjustments, such as using robust standard errors or alternative models,
-could enhance its interpretability and validity.}
+could enhance its interpretability and validity.
 
 **Disclosure of assistance:** *Besides class materials, what other
 sources of assistance did you use while completing this lab? These can
